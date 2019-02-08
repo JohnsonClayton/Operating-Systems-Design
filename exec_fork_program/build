@@ -1,0 +1,3 @@
+gcc -w main.c -o main
+gcc counter.c -o counter
+./main
