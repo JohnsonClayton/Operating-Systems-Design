@@ -75,6 +75,21 @@ shareCPU:
 	movq	%rsp, %rbp
 	.cfi_def_cfa_register 6
 	movl	%edi, -20(%rbp)
+#APP
+# 45 "coop.c" 1
+	mov %rax, regs(%rip)
+	mov %rbx, 8+regs(%rip)
+	mov %rcx, 16+regs(%rip)
+	mov %rdx, 24+regs(%rip)
+	mov %rdi, 32+regs(%rip)
+	mov %rsi, 40+regs(%rip)
+	movl $0, 48+regs(%rip)
+	mov %rbp, 56+regs(%rip)
+	mov %rsp, 64+regs(%rip)
+	movl $0, 72+regs(%rip)
+	
+# 0 "" 2
+#NO_APP
 	movl	$0, -4(%rbp)
 	cmpl	$0, -20(%rbp)
 	jne	.L7
@@ -98,9 +113,24 @@ startThread:
 	movq	%rsp, %rbp
 	.cfi_def_cfa_register 6
 	pushq	%rbx
-	subq	$24, %rsp
+	subq	$40, %rsp
 	.cfi_offset 3, -24
-	movq	%rdi, -24(%rbp)
+	movq	%rdi, -40(%rbp)
+#APP
+# 86 "coop.c" 1
+	mov %rax, mainRegs(%rip)
+	mov %rbx, 8+mainRegs(%rip)
+	mov %rcx, 16+mainRegs(%rip)
+	mov %rdx, 24+mainRegs(%rip)
+	mov %rdi, 32+mainRegs(%rip)
+	mov %rsi, 40+mainRegs(%rip)
+	movl $0, 48+mainRegs(%rip)
+	mov %rbp, 56+mainRegs(%rip)
+	mov %rsp, 64+mainRegs(%rip)
+	movl $0, 72+mainRegs(%rip)
+	
+# 0 "" 2
+#NO_APP
 	movl	thread_count(%rip), %ebx
 	movl	$6400, %edi
 	call	malloc@PLT
@@ -117,11 +147,18 @@ startThread:
 	leaq	0(,%rax,8), %rdx
 	leaq	regs(%rip), %rax
 	movq	%rcx, (%rdx,%rax)
-	movq	-24(%rbp), %rax
-	movl	$1, %edi
+	movl	thread_count(%rip), %eax
+	movl	%eax, -20(%rbp)
+	movl	thread_count(%rip), %eax
+	addl	$1, %eax
+	movl	%eax, thread_count(%rip)
+	movq	-40(%rbp), %rax
+	movl	-20(%rbp), %edx
+	movslq	%edx, %rdx
+	movq	%rdx, %rdi
 	call	*%rax
 	nop
-	addq	$24, %rsp
+	addq	$40, %rsp
 	popq	%rbx
 	popq	%rbp
 	.cfi_def_cfa 7, 8
