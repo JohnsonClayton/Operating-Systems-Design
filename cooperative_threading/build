@@ -1,0 +1,3 @@
+#!/bin/bash
+
+gcc -S coop.c -o coop.s && gcc coop.c -o coop
