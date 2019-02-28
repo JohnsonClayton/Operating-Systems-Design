@@ -75,8 +75,10 @@ shareCPU:
 	movq	%rsp, %rbp
 	.cfi_def_cfa_register 6
 	movl	%edi, -20(%rbp)
+	cmpl	$0, -20(%rbp)
+	jne	.L6
 #APP
-# 45 "coop.c" 1
+# 49 "coop.c" 1
 	mov %rax, regs(%rip)
 	mov %rbx, 8+regs(%rip)
 	mov %rcx, 16+regs(%rip)
@@ -89,12 +91,56 @@ shareCPU:
 	movl $0, 72+regs(%rip)
 	
 # 0 "" 2
+# 60 "coop.c" 1
+	mov regs(%rip), %rax
+	mov 8+regs(%rip), %rbx
+	mov 16+regs(%rip), %rcx
+	mov 24+regs(%rip), %rdx
+	mov 32+regs(%rip), %rdi
+	mov 40+regs(%rip), %rsi
+	mov 48+regs(%rip), %rbp
+	mov 56+regs(%rip), %rbp
+	mov 64+regs(%rip), %rsp
+	mov 72+regs(%rip), %rsp
+	
+# 0 "" 2
 #NO_APP
+	jmp	.L7
+.L6:
+#APP
+# 72 "coop.c" 1
+	mov %rax, 80+regs(%rip)
+	mov %rbx, 88+regs(%rip)
+	mov %rcx, 96+regs(%rip)
+	mov %rdx, 104+regs(%rip)
+	mov %rdi, 112+regs(%rip)
+	mov %rsi, 120+regs(%rip)
+	movl $0, 128+regs(%rip)
+	mov %rbp, 136+regs(%rip)
+	mov %rsp, 144+regs(%rip)
+	movl $0, 152+regs(%rip)
+	
+# 0 "" 2
+# 83 "coop.c" 1
+	mov regs(%rip), %rax
+	mov 8+regs(%rip), %rbx
+	mov 16+regs(%rip), %rcx
+	mov 24+regs(%rip), %rdx
+	mov 32+regs(%rip), %rdi
+	mov 40+regs(%rip), %rsi
+	mov 48+regs(%rip), %rbp
+	mov 56+regs(%rip), %rbp
+	mov 64+regs(%rip), %rsp
+	mov 72+regs(%rip), %rsp
+	
+# 0 "" 2
+#NO_APP
+.L7:
 	movl	$0, -4(%rbp)
 	cmpl	$0, -20(%rbp)
-	jne	.L7
+	jne	.L9
 	movl	$1, -4(%rbp)
-.L7:
+.L9:
 	nop
 	popq	%rbp
 	.cfi_def_cfa 7, 8
@@ -117,7 +163,7 @@ startThread:
 	.cfi_offset 3, -24
 	movq	%rdi, -40(%rbp)
 #APP
-# 86 "coop.c" 1
+# 126 "coop.c" 1
 	mov %rax, mainRegs(%rip)
 	mov %rbx, 8+mainRegs(%rip)
 	mov %rcx, 16+mainRegs(%rip)
