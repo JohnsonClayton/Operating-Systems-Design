@@ -211,12 +211,6 @@ shareCPU:
 	.cfi_endproc
 .LFE7:
 	.size	shareCPU, .-shareCPU
-	.section	.rodata
-.LC4:
-	.string	"test"
-.LC5:
-	.string	"test2"
-	.text
 	.globl	startThread
 	.type	startThread, @function
 startThread:
@@ -231,10 +225,6 @@ startThread:
 	subq	$40, %rsp
 	.cfi_offset 3, -24
 	movq	%rdi, -40(%rbp)
-	leaq	.LC4(%rip), %rax
-	movq	%rax, stack(%rip)
-	leaq	.LC5(%rip), %rax
-	movq	%rax, 8+stack(%rip)
 	movl	thread_count(%rip), %ebx
 	movl	$6400, %edi
 	call	malloc@PLT

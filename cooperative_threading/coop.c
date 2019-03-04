@@ -20,7 +20,7 @@
 
 //typdef void (*funPtr)(int);
 
-void* stack[2];
+void* stack[2]; //May need to reinitialize to be larger, rn each index is separated by 8 bytes which is not enough
 void* regs[2][10];
 //__uint64_t mainRegs[10];
 void* mainRegs[10];
@@ -193,8 +193,6 @@ void startThread(void* ptr) {
 	
 	//main1(1);
 	//main2(2);
-	stack[0] = "test";
-	stack[1] = "test2";
 	
 	//Create space for new thread to be saved
 	stack[thread_count] = malloc(6400*sizeof(__uint8_t)); // 64k stack
@@ -202,6 +200,8 @@ void startThread(void* ptr) {
 	for(int i = 0; i < 10; i++) {
 		regs[thread_count][i] = malloc(sizeof(__uint8_t)*8);	
 	}
+	//stack[0] = "test";
+	//stack[1] = "test2";
 	
 	//Kick off thread passed in
 	
