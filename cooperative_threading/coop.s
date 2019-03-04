@@ -66,7 +66,9 @@ main2:
 	.size	main2, .-main2
 	.section	.rodata
 .LC2:
-	.string	"Reload the main regs!"
+	.string	"Thread is 0"
+.LC3:
+	.string	"Thread is 1"
 	.text
 	.globl	shareCPU
 	.type	shareCPU, @function
@@ -80,15 +82,10 @@ shareCPU:
 	.cfi_def_cfa_register 6
 	subq	$32, %rsp
 	movl	%edi, -20(%rbp)
-	movl	thread_count(%rip), %eax
-	cmpl	$1, %eax
+	cmpl	$0, -20(%rbp)
 	jne	.L6
 	leaq	.LC2(%rip), %rdi
 	call	puts@PLT
-	jmp	.L7
-.L6:
-	cmpl	$0, -20(%rbp)
-	jne	.L8
 #APP
 # 62 "coop.c" 1
 	mov %rax, regs(%rip)
@@ -99,23 +96,31 @@ shareCPU:
 	mov %rsi, 40+regs(%rip)
 	movl $0, 48+regs(%rip)
 	mov %rbp, 56+regs(%rip)
+	mov %rsp, 64+regs(%rip)
 	
 # 0 "" 2
-# 70 "coop.c" 1
+# 71 "coop.c" 1
 	lea (%rip), %rax
+	mov %rax, 72+regs(%rip)
+	
+# 0 "" 2
+# 75 "coop.c" 1
+	mov 152+regs(%rip), %rax
 	push %rax
-	mov %rsp, 64+regs(%rip)
+	ret
 	
 # 0 "" 2
 #NO_APP
 	jmp	.L7
-.L8:
+.L6:
+	leaq	.LC3(%rip), %rdi
+	call	puts@PLT
 #APP
-# 101 "coop.c" 1
+# 106 "coop.c" 1
 	push (%rip)
 	
 # 0 "" 2
-# 102 "coop.c" 1
+# 107 "coop.c" 1
 	mov %rax, 80+regs(%rip)
 	mov %rbx, 88+regs(%rip)
 	mov %rcx, 96+regs(%rip)
@@ -128,7 +133,7 @@ shareCPU:
 	movl $0, 152+regs(%rip)
 	
 # 0 "" 2
-# 116 "coop.c" 1
+# 121 "coop.c" 1
 	mov regs(%rip), %rax
 	mov 8+regs(%rip), %rbx
 	mov 16+regs(%rip), %rcx
@@ -141,7 +146,7 @@ shareCPU:
 	mov 72+regs(%rip), %rsp
 	
 # 0 "" 2
-# 126 "coop.c" 1
+# 131 "coop.c" 1
 	pop (%rip)
 	
 # 0 "" 2
@@ -149,9 +154,9 @@ shareCPU:
 .L7:
 	movl	$0, -4(%rbp)
 	cmpl	$0, -20(%rbp)
-	jne	.L10
+	jne	.L9
 	movl	$1, -4(%rbp)
-.L10:
+.L9:
 	nop
 	leave
 	.cfi_def_cfa 7, 8
@@ -182,8 +187,8 @@ startThread:
 	leaq	stack(%rip), %rax
 	movq	%rcx, (%rdx,%rax)
 	movl	$0, -24(%rbp)
-	jmp	.L12
-.L13:
+	jmp	.L11
+.L12:
 	movl	thread_count(%rip), %ebx
 	movl	$8, %edi
 	call	malloc@PLT
@@ -200,11 +205,11 @@ startThread:
 	leaq	regs(%rip), %rax
 	movq	%rsi, (%rdx,%rax)
 	addl	$1, -24(%rbp)
-.L12:
+.L11:
 	cmpl	$9, -24(%rbp)
-	jle	.L13
+	jle	.L12
 #APP
-# 177 "coop.c" 1
+# 182 "coop.c" 1
 	mov %rax, regs(%rip)
 	mov %rbx, 8+regs(%rip)
 	mov %rcx, 16+regs(%rip)
@@ -216,9 +221,10 @@ startThread:
 	mov %rsp, 64+regs(%rip)
 	
 # 0 "" 2
-# 189 "coop.c" 1
+# 191 "coop.c" 1
 	lea (%rip), %rax
-	mov %rax, 72+regs(%rip)
+	add $57, %rax
+	mov %rax, 152+regs(%rip)
 	
 # 0 "" 2
 #NO_APP

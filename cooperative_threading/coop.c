@@ -54,11 +54,11 @@ void shareCPU(int thread) {
 		// mov %rip, %rax
 		// push %rax
 		// Save %rsp
-	if(thread_count==1) {
-		puts("Reload the main regs!");
-	}
-	else if(thread == 0) {
-		
+	//if(thread_count==1) {
+	//	puts("Reload the main regs!");
+	//}
+	if(thread == 0) {
+		printf("Thread is 0\n");	
 		asm(	"mov %rax, regs(%rip)\n\t"
 			"mov %rbx, 8+regs(%rip)\n\t"
 			"mov %rcx, 16+regs(%rip)\n\t"
@@ -66,11 +66,15 @@ void shareCPU(int thread) {
 			"mov %rdi, 32+regs(%rip)\n\t"
 			"mov %rsi, 40+regs(%rip)\n\t"
 			"movl $0, 48+regs(%rip)\n\t"
-			"mov %rbp, 56+regs(%rip)\n\t");
-		asm(	"lea (%rip), %rax\n\t"
-			"push %rax\n\t"
+			"mov %rbp, 56+regs(%rip)\n\t"
 			"mov %rsp, 64+regs(%rip)\n\t");
-
+		asm(	"lea (%rip), %rax\n\t"
+			"mov %rax, 72+regs(%rip)\n\t");
+		
+		//Need to get the saved rip to the current rip
+		asm(	"mov 152+regs(%rip), %rax\n\t"
+			"push %rax\n\t"
+			"ret\n\t");
 
 		/*asm(	"push (%rip)\n\t");
 		//Save thread 0 (current)
@@ -97,6 +101,7 @@ void shareCPU(int thread) {
 			"mov 152+regs(%rip), %rsp\n\t");
 		asm(	"pop (%rip)\n\t");*/
 	} else {
+		printf("Thread is 1\n");	
 		//Save thread 1 (current)
 		asm(	"push (%rip)\n\t");
 		asm(	"mov %rax, 80+regs(%rip)\n\t"
@@ -183,11 +188,9 @@ void startThread(void* ptr) {
 		"movl $0, 48+regs(%rip)\n\t"
 		"mov %rbp, 56+regs(%rip)\n\t"
 		"mov %rsp, 64+regs(%rip)\n\t");
-	/*asm(	"lea (%rip), %rax\n\t"
-		"push %rax\n\t"
-		"mov %rsp, 64+regs(%rip)\n\t");*/
 	asm(	"lea (%rip), %rax\n\t" 
-		"mov %rax, 72+regs(%rip)\n\t");
+		"add $57, %rax\n\t"
+		"mov %rax, 152+regs(%rip)\n\t");
 	//Need to save stack...
 
 	
