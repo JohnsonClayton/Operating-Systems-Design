@@ -25,6 +25,7 @@ void* regs[2][10];
 //__uint64_t mainRegs[10];
 void* mainRegs[10];
 int thread_count = 0;
+int stack_size = 0;
 
 void main1(int whoami) {
 	while(1) {
@@ -59,6 +60,7 @@ void shareCPU(int thread) {
 	//}
 	if(thread == 0) {
 		printf("Thread is 0\n");	
+		//Save stuff for current process
 		asm(	"mov %rax, regs(%rip)\n\t"
 			"mov %rbx, 8+regs(%rip)\n\t"
 			"mov %rcx, 16+regs(%rip)\n\t"
@@ -71,7 +73,43 @@ void shareCPU(int thread) {
 		asm(	"lea (%rip), %rax\n\t"
 			"mov %rax, 72+regs(%rip)\n\t");
 		
+		asm(	"mov stack_size(%rip), %rdx #This is where I initialize the loop!\n\t"
+			"mov %rsp, %rax\n\t"
+			"mov (%rsp), %rbx\n\t"
+			"mov stack(%rip), %rcx\n\t"
+			"saveloop0:\n\t"
+			"mov %rbx, (%rcx) #This is the top of the loop\n\t"
+			"add $2, %rcx\n\t"
+			"add $2, %rsp\n\t"
+			"add $2, %rdx\n\t"
+			"cmp %rsp, %rbp\n\t"
+			"jnc saveloop0\n\t"
+			"mov %rdx, stack_size(%rip)\n\t"
+			"mov %rax, %rsp\n\t");
+		
+		
 		//Need to get the saved rip to the current rip
+		asm(	"mov 80+regs(%rip), %rax\n\t"
+			"mov 80+regs(%rip), %rbx\n\t"
+			"mov 96+regs(%rip), %rcx\n\t"
+			"mov 104+regs(%rip), %rdx\n\t"
+			"mov 112+regs(%rip), %rdi\n\t"
+			"mov 120+regs(%rip), %rsi\n\t"
+			"mov 128+regs(%rip), %rbp\n\t"
+			"mov 136+regs(%rip), %rbp\n\t"
+			"mov 144+regs(%rip), %rsp\n\t");
+		//Load up stack for new process
+		asm(	"mov stack_size(%rip), %rdx\n\t"
+			"mov stack(%rip), %rbx\n\t"
+			"add %rdx, %rbx\n\t"
+			"restoreloop1:\n\t"
+			"mov (%rbx), %rcx\n\t"
+			"push %rcx\n\t"
+			"sub $2, %rbx\n\t"
+			"sub $2, %rdx\n\t"
+			"cmp $0, %rdx\n\t"
+			"jnz restoreloop1\n\t");
+
 		asm(	"mov 152+regs(%rip), %rax\n\t"
 			"push %rax\n\t"
 			"ret\n\t");
@@ -89,7 +127,7 @@ void shareCPU(int thread) {
 			"mov %rsp, 64+regs(%rip)\n\t"
 			"movl $0, 72+regs(%rip)\n\t"); // Moving rip makes it upset
 		//Load up thread 1's stuff (next)
-		asm(	"mov regs(%rip), %rax\n\t"
+		asm(	"mov 80+regs(%rip), %rax\n\t"
 			"mov 80+regs(%rip), %rbx\n\t"
 			"mov 96+regs(%rip), %rcx\n\t"
 			"mov 104+regs(%rip), %rdx\n\t"
@@ -155,6 +193,8 @@ void startThread(void* ptr) {
 	
 	//main1(1);
 	//main2(2);
+	stack[0] = "test";
+	stack[1] = "test2";
 	
 	//Create space for new thread to be saved
 	stack[thread_count] = malloc(6400*sizeof(__uint8_t)); // 64k stack
@@ -179,19 +219,40 @@ void startThread(void* ptr) {
 		"mov %rsp, 64+mainRegs(%rip)\n\t"
 		"movl $0, 72+mainRegs(%rip)\n\t"); // Moving rip makes it upset*/
 
-	asm(	"mov %rax, regs(%rip)\n\t"
-		"mov %rbx, 8+regs(%rip)\n\t"
-		"mov %rcx, 16+regs(%rip)\n\t"
-		"mov %rdx, 24+regs(%rip)\n\t"
-		"mov %rdi, 32+regs(%rip)\n\t"
-		"mov %rsi, 40+regs(%rip)\n\t"
-		"movl $0, 48+regs(%rip)\n\t"
-		"mov %rbp, 56+regs(%rip)\n\t"
-		"mov %rsp, 64+regs(%rip)\n\t");
+	asm(	"mov %rax, 80+regs(%rip)\n\t"
+		"mov %rbx, 88+regs(%rip)\n\t"
+		"mov %rcx, 96+regs(%rip)\n\t"
+		"mov %rdx, 104+regs(%rip)\n\t"
+		"mov %rdi, 112+regs(%rip)\n\t"
+		"mov %rsi, 120+regs(%rip)\n\t"
+		"movl $0, 128+regs(%rip)\n\t"
+		"mov %rbp, 136+regs(%rip)\n\t"
+		"mov %rsp, 144+regs(%rip)\n\t");
 	asm(	"lea (%rip), %rax\n\t" 
 		"add $57, %rax\n\t"
 		"mov %rax, 152+regs(%rip)\n\t");
 	//Need to save stack...
+		//PoC:
+	/*asm(	"mov %rsp, %rax\n\t"
+		"mov (%rsp), %rbx\n\t"
+		"mov stack(%rip), %rcx\n\t"
+		"mov %rbx, (%rcx)\n\t"
+		"add $2, %rcx\n\t"
+		"mov %rbx, (%rcx)\n\t"
+		"mov %rax, %rsp\n\t");*/
+	asm(	"mov stack_size(%rip), %rdx #This is where I initialize the loop!\n\t"
+		"mov %rsp, %rax\n\t"
+		"mov (%rsp), %rbx\n\t"
+		"mov stack(%rip), %rcx\n\t"
+		"saveloopStart:\n\t"
+		"mov %rbx, (%rcx) #This is the top of the loop\n\t"
+		"add $2, %rcx\n\t"
+		"add $2, %rsp\n\t"
+		"add $2, %rdx\n\t"
+		"cmp %rsp, %rbp\n\t"
+		"jnc saveloopStart\n\t"
+		"mov %rdx, stack_size(%rip)\n\t"
+		"mov %rax, %rsp\n\t");
 
 	
 

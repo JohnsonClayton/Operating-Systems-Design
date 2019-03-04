@@ -10,6 +10,12 @@
 	.size	thread_count, 4
 thread_count:
 	.zero	4
+	.globl	stack_size
+	.align 4
+	.type	stack_size, @object
+	.size	stack_size, 4
+stack_size:
+	.zero	4
 	.section	.rodata
 .LC0:
 	.string	"Main 1 says Hello"
@@ -87,7 +93,7 @@ shareCPU:
 	leaq	.LC2(%rip), %rdi
 	call	puts@PLT
 #APP
-# 62 "coop.c" 1
+# 64 "coop.c" 1
 	mov %rax, regs(%rip)
 	mov %rbx, 8+regs(%rip)
 	mov %rcx, 16+regs(%rip)
@@ -99,12 +105,53 @@ shareCPU:
 	mov %rsp, 64+regs(%rip)
 	
 # 0 "" 2
-# 71 "coop.c" 1
+# 73 "coop.c" 1
 	lea (%rip), %rax
 	mov %rax, 72+regs(%rip)
 	
 # 0 "" 2
-# 75 "coop.c" 1
+# 76 "coop.c" 1
+	mov stack_size(%rip), %rdx #This is where I initialize the loop!
+	mov %rsp, %rax
+	mov (%rsp), %rbx
+	mov stack(%rip), %rcx
+	saveloop0:
+	mov %rbx, (%rcx) #This is the top of the loop
+	add $2, %rcx
+	add $2, %rsp
+	add $2, %rdx
+	cmp %rsp, %rbp
+	jnc saveloop0
+	mov %rdx, stack_size(%rip)
+	mov %rax, %rsp
+	
+# 0 "" 2
+# 92 "coop.c" 1
+	mov 80+regs(%rip), %rax
+	mov 80+regs(%rip), %rbx
+	mov 96+regs(%rip), %rcx
+	mov 104+regs(%rip), %rdx
+	mov 112+regs(%rip), %rdi
+	mov 120+regs(%rip), %rsi
+	mov 128+regs(%rip), %rbp
+	mov 136+regs(%rip), %rbp
+	mov 144+regs(%rip), %rsp
+	
+# 0 "" 2
+# 102 "coop.c" 1
+	mov stack_size(%rip), %rdx
+	mov stack(%rip), %rbx
+	add %rdx, %rbx
+	restoreloop1:
+	mov (%rbx), %rcx
+	push %rcx
+	sub $2, %rbx
+	sub $2, %rdx
+	cmp $0, %rdx
+	jnz restoreloop1
+	
+# 0 "" 2
+# 113 "coop.c" 1
 	mov 152+regs(%rip), %rax
 	push %rax
 	ret
@@ -116,11 +163,11 @@ shareCPU:
 	leaq	.LC3(%rip), %rdi
 	call	puts@PLT
 #APP
-# 106 "coop.c" 1
+# 144 "coop.c" 1
 	push (%rip)
 	
 # 0 "" 2
-# 107 "coop.c" 1
+# 145 "coop.c" 1
 	mov %rax, 80+regs(%rip)
 	mov %rbx, 88+regs(%rip)
 	mov %rcx, 96+regs(%rip)
@@ -133,7 +180,7 @@ shareCPU:
 	movl $0, 152+regs(%rip)
 	
 # 0 "" 2
-# 121 "coop.c" 1
+# 159 "coop.c" 1
 	mov regs(%rip), %rax
 	mov 8+regs(%rip), %rbx
 	mov 16+regs(%rip), %rcx
@@ -146,7 +193,7 @@ shareCPU:
 	mov 72+regs(%rip), %rsp
 	
 # 0 "" 2
-# 131 "coop.c" 1
+# 169 "coop.c" 1
 	pop (%rip)
 	
 # 0 "" 2
@@ -164,6 +211,12 @@ shareCPU:
 	.cfi_endproc
 .LFE7:
 	.size	shareCPU, .-shareCPU
+	.section	.rodata
+.LC4:
+	.string	"test"
+.LC5:
+	.string	"test2"
+	.text
 	.globl	startThread
 	.type	startThread, @function
 startThread:
@@ -178,6 +231,10 @@ startThread:
 	subq	$40, %rsp
 	.cfi_offset 3, -24
 	movq	%rdi, -40(%rbp)
+	leaq	.LC4(%rip), %rax
+	movq	%rax, stack(%rip)
+	leaq	.LC5(%rip), %rax
+	movq	%rax, 8+stack(%rip)
 	movl	thread_count(%rip), %ebx
 	movl	$6400, %edi
 	call	malloc@PLT
@@ -209,22 +266,38 @@ startThread:
 	cmpl	$9, -24(%rbp)
 	jle	.L12
 #APP
-# 182 "coop.c" 1
-	mov %rax, regs(%rip)
-	mov %rbx, 8+regs(%rip)
-	mov %rcx, 16+regs(%rip)
-	mov %rdx, 24+regs(%rip)
-	mov %rdi, 32+regs(%rip)
-	mov %rsi, 40+regs(%rip)
-	movl $0, 48+regs(%rip)
-	mov %rbp, 56+regs(%rip)
-	mov %rsp, 64+regs(%rip)
+# 222 "coop.c" 1
+	mov %rax, 80+regs(%rip)
+	mov %rbx, 88+regs(%rip)
+	mov %rcx, 96+regs(%rip)
+	mov %rdx, 104+regs(%rip)
+	mov %rdi, 112+regs(%rip)
+	mov %rsi, 120+regs(%rip)
+	movl $0, 128+regs(%rip)
+	mov %rbp, 136+regs(%rip)
+	mov %rsp, 144+regs(%rip)
 	
 # 0 "" 2
-# 191 "coop.c" 1
+# 231 "coop.c" 1
 	lea (%rip), %rax
 	add $57, %rax
 	mov %rax, 152+regs(%rip)
+	
+# 0 "" 2
+# 243 "coop.c" 1
+	mov stack_size(%rip), %rdx #This is where I initialize the loop!
+	mov %rsp, %rax
+	mov (%rsp), %rbx
+	mov stack(%rip), %rcx
+	saveloopStart:
+	mov %rbx, (%rcx) #This is the top of the loop
+	add $2, %rcx
+	add $2, %rsp
+	add $2, %rdx
+	cmp %rsp, %rbp
+	jnc saveloopStart
+	mov %rdx, stack_size(%rip)
+	mov %rax, %rsp
 	
 # 0 "" 2
 #NO_APP
