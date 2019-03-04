@@ -20,7 +20,7 @@
 
 //typdef void (*funPtr)(int);
 
-void* stack[2]; //May need to reinitialize to be larger, rn each index is separated by 8 bytes which is not enough
+void* stack[2][800]; //May need to reinitialize to be larger, rn each index is separated by 8 bytes which is not enough
 void* regs[2][10];
 //__uint64_t mainRegs[10];
 void* mainRegs[10];
@@ -112,6 +112,7 @@ void shareCPU(int thread) {
 
 		asm(	"mov 152+regs(%rip), %rax\n\t"
 			"push %rax\n\t"
+			"leave\n\t"
 			"ret\n\t");
 
 		/*asm(	"push (%rip)\n\t");
@@ -190,35 +191,25 @@ void shareCPU(int thread) {
 
 void startThread(void* ptr) {
 	//To be completed by student
-	
-	//main1(1);
-	//main2(2);
+	printf("Entering startThread #%d\n", thread_count+1);
 	
 	//Create space for new thread to be saved
-	stack[thread_count] = malloc(6400*sizeof(__uint8_t)); // 64k stack
+	//stack[thread_count] = malloc(6400*sizeof(__uint8_t)); // 64k stack
+	for(int i = 0; i < 800; i++) {
+		stack[thread_count][i] = malloc(sizeof(__uint8_t)*8);
+	}
 	//regs[thread_count] = malloc(10*sizeof(__uint8_t)*8); // 10 regs
 	for(int i = 0; i < 10; i++) {
 		regs[thread_count][i] = malloc(sizeof(__uint8_t)*8);	
 	}
-	//stack[0] = "test";
-	//stack[1] = "test2";
+	//stack[0][0] = 1234; //+8 to get to next one
+	//stack[0][1] = 5678;
 	
 	//Kick off thread passed in
 	
-	//Save main registers
-	// - Need to find how to save 
-	//asm(	"push (%rip)\n\t");
-	/*asm(	"mov %rax, mainRegs(%rip)\n\t"
-		"mov %rbx, 8+mainRegs(%rip)\n\t"
-		"mov %rcx, 16+mainRegs(%rip)\n\t"
-		"mov %rdx, 24+mainRegs(%rip)\n\t"
-		"mov %rdi, 32+mainRegs(%rip)\n\t"
-		"mov %rsi, 40+mainRegs(%rip)\n\t"
-		"movl $0, 48+mainRegs(%rip)\n\t"
-		"mov %rbp, 56+mainRegs(%rip)\n\t"
-		"mov %rsp, 64+mainRegs(%rip)\n\t"
-		"movl $0, 72+mainRegs(%rip)\n\t"); // Moving rip makes it upset*/
+	//asm(	"leave\n\t""ret\n\t");
 
+	//Save main registers
 	asm(	"mov %rax, 80+regs(%rip)\n\t"
 		"mov %rbx, 88+regs(%rip)\n\t"
 		"mov %rcx, 96+regs(%rip)\n\t"
@@ -229,7 +220,7 @@ void startThread(void* ptr) {
 		"mov %rbp, 136+regs(%rip)\n\t"
 		"mov %rsp, 144+regs(%rip)\n\t");
 	asm(	"lea (%rip), %rax\n\t" 
-		"add $57, %rax\n\t"
+		"add $101, %rax\n\t"
 		"mov %rax, 152+regs(%rip)\n\t");
 	//Need to save stack...
 		//PoC:
