@@ -45,21 +45,13 @@ void main2(int whoami) {
 void shareCPU(int thread) {
 	//To be completed by student
 	
-	//regs[0][0] = 1234;
-	//regs[0][9] = 5678;
-	//regs[1][0] = 1234;
-	//regs[1][9] = 5678;
-
 	//Save current thread regs then load new thread regs
 		// Save most regs
 		// mov %rip, %rax
 		// push %rax
 		// Save %rsp
-	//if(thread_count==1) {
-	//	puts("Reload the main regs!");
-	//}
 	if(thread == 0) {
-		printf("Thread is 0\n");	
+		//printf("Thread is 0\n");	
 		//Save stuff for current process
 		asm(	"mov %rax, regs(%rip)\n\t"
 			"mov %rbx, 8+regs(%rip)\n\t"
@@ -71,19 +63,20 @@ void shareCPU(int thread) {
 			"mov %rbp, 56+regs(%rip)\n\t"
 			"mov %rsp, 64+regs(%rip)\n\t");
 		asm(	"lea (%rip), %rax\n\t"
+			"add $50, %rax\n\t"
 			"mov %rax, 72+regs(%rip)\n\t");
 		
 		asm(	"mov stack_size(%rip), %rdx #This is where I initialize the loop!\n\t"
 			"mov %rsp, %rax\n\t"
 			"mov (%rsp), %rbx\n\t"
-			"mov stack(%rip), %rcx\n\t"
-			"saveloop0:\n\t"
-			"mov %rbx, (%rcx) #This is the top of the loop\n\t"
+			"mov 6400+stack(%rip), %rcx\n\t"
+			"saveloop1:\n\t"
+			"mov %rbx, %rcx #This is the top of the loop\n\t"
 			"add $2, %rcx\n\t"
 			"add $2, %rsp\n\t"
 			"add $2, %rdx\n\t"
 			"cmp %rsp, %rbp\n\t"
-			"jnc saveloop0\n\t"
+			"jnc saveloop1\n\t"
 			"mov %rdx, stack_size(%rip)\n\t"
 			"mov %rax, %rsp\n\t");
 		
@@ -98,51 +91,27 @@ void shareCPU(int thread) {
 			"mov 128+regs(%rip), %rbp\n\t"
 			"mov 136+regs(%rip), %rbp\n\t"
 			"mov 144+regs(%rip), %rsp\n\t");
+
 		//Load up stack for new process
 		asm(	"mov stack_size(%rip), %rdx\n\t"
 			"mov stack(%rip), %rbx\n\t"
 			"add %rdx, %rbx\n\t"
 			"restoreloop1:\n\t"
-			"mov (%rbx), %rcx\n\t"
+			"mov %rbx, %rcx\n\t"
 			"push %rcx\n\t"
 			"sub $2, %rbx\n\t"
 			"sub $2, %rdx\n\t"
 			"cmp $0, %rdx\n\t"
 			"jnz restoreloop1\n\t");
 
+		//Switch over
 		asm(	"mov 152+regs(%rip), %rax\n\t"
 			"push %rax\n\t"
 			"leave\n\t"
 			"ret\n\t");
-
-		/*asm(	"push (%rip)\n\t");
-		//Save thread 0 (current)
-		asm(	"mov %rax, regs(%rip)\n\t"
-			"mov %rbx, 8+regs(%rip)\n\t"
-			"mov %rcx, 16+regs(%rip)\n\t"
-			"mov %rdx, 24+regs(%rip)\n\t"
-			"mov %rdi, 32+regs(%rip)\n\t"
-			"mov %rsi, 40+regs(%rip)\n\t"
-			"movl $0, 48+regs(%rip)\n\t"
-			"mov %rbp, 56+regs(%rip)\n\t"
-			"mov %rsp, 64+regs(%rip)\n\t"
-			"movl $0, 72+regs(%rip)\n\t"); // Moving rip makes it upset
-		//Load up thread 1's stuff (next)
-		asm(	"mov 80+regs(%rip), %rax\n\t"
-			"mov 80+regs(%rip), %rbx\n\t"
-			"mov 96+regs(%rip), %rcx\n\t"
-			"mov 104+regs(%rip), %rdx\n\t"
-			"mov 112+regs(%rip), %rdi\n\t"
-			"mov 120+regs(%rip), %rsi\n\t"
-			"mov 128+regs(%rip), %rbp\n\t"
-			"mov 136+regs(%rip), %rbp\n\t"
-			"mov 144+regs(%rip), %rsp\n\t"
-			"mov 152+regs(%rip), %rsp\n\t");
-		asm(	"pop (%rip)\n\t");*/
 	} else {
-		printf("Thread is 1\n");	
-		//Save thread 1 (current)
-		asm(	"push (%rip)\n\t");
+		//printf("Thread is 1\n");	
+		//Save stuff for current process
 		asm(	"mov %rax, 80+regs(%rip)\n\t"
 			"mov %rbx, 88+regs(%rip)\n\t"
 			"mov %rcx, 96+regs(%rip)\n\t"
@@ -151,12 +120,27 @@ void shareCPU(int thread) {
 			"mov %rsi, 120+regs(%rip)\n\t"
 			"movl $0, 128+regs(%rip)\n\t"
 			"mov %rbp, 136+regs(%rip)\n\t"
-			"mov %rsp, 144+regs(%rip)\n\t"
-			"movl $0, 152+regs(%rip)\n\t"); // Moving rip makes it upset
-			//While rsp >= rbp, mov (rsp) -> stack(%rip)
-				//Offset needs to change every time
+			"mov %rsp, 144+regs(%rip)\n\t");
+		asm(	"lea (%rip), %rax\n\t"
+			"add $50, %rax\n\t"
+			"mov %rax, 152+regs(%rip)\n\t");
+
+		asm(	"mov stack_size(%rip), %rdx #This is where I initialize the loop!\n\t"
+			"mov %rsp, %rax\n\t"
+			"mov (%rsp), %rbx\n\t"
+			"mov stack(%rip), %rcx\n\t"
+			"saveloop2:\n\t"
+			"mov %rbx, %rcx #This is the top of the loop\n\t"
+			"add $2, %rcx\n\t"
+			"add $2, %rsp\n\t"
+			"add $2, %rdx\n\t"
+			"cmp %rsp, %rbp\n\t"
+			"jnc saveloop2\n\t"
+			"mov %rdx, stack_size(%rip)\n\t"
+			"mov %rax, %rsp\n\t");
 		
-		//Load up thread 0's stuff (next)
+		
+		//Need to get the saved rip to the current rip
 		asm(	"mov regs(%rip), %rax\n\t"
 			"mov 8+regs(%rip), %rbx\n\t"
 			"mov 16+regs(%rip), %rcx\n\t"
@@ -165,28 +149,26 @@ void shareCPU(int thread) {
 			"mov 40+regs(%rip), %rsi\n\t"
 			"mov 48+regs(%rip), %rbp\n\t"
 			"mov 56+regs(%rip), %rbp\n\t"
-			"mov 64+regs(%rip), %rsp\n\t"
-			"mov 72+regs(%rip), %rsp\n\t");
-		asm(	"pop (%rip)\n\t");
+			"mov 64+regs(%rip), %rsp\n\t");
+
+		//Load up stack for new process
+		asm(	"mov stack_size(%rip), %rdx\n\t"
+			"mov 6400+stack(%rip), %rbx\n\t"
+			"add %rdx, %rbx\n\t"
+			"restoreloop2:\n\t"
+			"mov (%rbx), %rcx\n\t"
+			"push %rcx\n\t"
+			"sub $2, %rbx\n\t"
+			"sub $2, %rdx\n\t"
+			"cmp $0, %rdx\n\t"
+			"jnz restoreloop2\n\t");
+
+		//Switch over
+		asm(	"mov 72+regs(%rip), %rax\n\t"
+			"push %rax\n\t"
+			"leave\n\t"
+			"ret\n\t");
 	}
-
-	/*asm(	"mov %rax, stack(%rip)\n\t"
-		"mov %rbx, 8+stack(%rip)\n\t"
-		"mov %rcx, 16+stack(%rip)\n\t"
-		"mov %rdx, 24+stack(%rip)\n\t"
-		"mov %rdi, 32+stack(%rip)\n\t"
-		"mov %rsi, 40+stack(%rip)\n\t"
-		"movl $0, 48+stack(%rip)\n\t"
-		"mov %rbp, 56+stack(%rip)\n\t"
-		"mov %rsp, 64+stack(%rip)\n\t"
-		"movl $0, 72+stack(%rip)\n\t"); // Moving rip makes it upset*/
-
-	int nextThread = 0;
-	if(thread == 0) {
-		nextThread = 1;
-	}
-
-
 }
 
 void startThread(void* ptr) {
@@ -202,8 +184,6 @@ void startThread(void* ptr) {
 	for(int i = 0; i < 10; i++) {
 		regs[thread_count][i] = malloc(sizeof(__uint8_t)*8);	
 	}
-	//stack[0][0] = 1234; //+8 to get to next one
-	//stack[0][1] = 5678;
 	
 	//Kick off thread passed in
 	
@@ -222,21 +202,14 @@ void startThread(void* ptr) {
 	asm(	"lea (%rip), %rax\n\t" 
 		"add $101, %rax\n\t"
 		"mov %rax, 152+regs(%rip)\n\t");
+
 	//Need to save stack...
-		//PoC:
-	/*asm(	"mov %rsp, %rax\n\t"
-		"mov (%rsp), %rbx\n\t"
-		"mov stack(%rip), %rcx\n\t"
-		"mov %rbx, (%rcx)\n\t"
-		"add $2, %rcx\n\t"
-		"mov %rbx, (%rcx)\n\t"
-		"mov %rax, %rsp\n\t");*/
 	asm(	"mov stack_size(%rip), %rdx #This is where I initialize the loop!\n\t"
 		"mov %rsp, %rax\n\t"
 		"mov (%rsp), %rbx\n\t"
 		"mov stack(%rip), %rcx\n\t"
 		"saveloopStart:\n\t"
-		"mov %rbx, (%rcx) #This is the top of the loop\n\t"
+		"mov %rbx, %rcx #This is the top of the loop\n\t"
 		"add $2, %rcx\n\t"
 		"add $2, %rsp\n\t"
 		"add $2, %rdx\n\t"
