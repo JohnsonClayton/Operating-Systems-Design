@@ -1,16 +1,95 @@
+/*	Clayton Johnson - CSCI 470
+ *		Cooperative Threading Assignment
+ *
+ *
+ *
+ */
 #include <stdio.h>
+#include <stdlib.h>
 
-int thread = 0;
+void* regs[2];
+void* stack[2];
+__uint64_t mainRegs[10];
+
+int thread_count = 0;
+
+void saveRegisters(void *regs) {
+	//Comment in locations of vars and where they should go
+	/*
+	 *	pushq %rbp
+	 *	movq %rsp, %rbp
+	 *	movq %rdi, -8(%rbp)	#regs
+	 */
+	
+	//Save Registers
+	asm(	"mov %rax, (%rdi)\n\t"
+		"mov %rbx, 8(%rdi)\n\t"
+		"mov %rcx, 16(%rdi)\n\t"
+		"mov %rdx, 24(%rdi)\n\t"
+		"mov %rdi, 32(%rdi)\n\t"
+		"mov %rsi, 40(%rdi)\n\t"
+		"mov %rsp, 48(%rdi)\n\t"
+		"mov %rbp, 56(%rdi)\n\t");
+	
+	//puts("saveRegisters reached!");
+}
+
+void restoreRegisters(void *regs) {
+	//Comment in locations of vars and w/e
+	/*
+	 *	pushq %rbp
+	 *	movq %rsp, %rbp
+	 *	movq %rdi, -8(%rbp)	#regs
+	 */
+	
+	//Load Registers
+	asm(	"mov (%rdi), %rax\n\t"
+		"mov 8(%rdi), %rbx\n\t"
+		"mov 16(%rdi), %rcx\n\t"
+		"mov 24(%rdi), %rdx\n\t"
+		"mov 32(%rdi), %rdi\n\t"
+		"mov 40(%rdi), %rsi\n\t"
+		"mov 48(%rdi), %rsp\n\t"
+		"mov 56(%rdi), %rbp\n\t");
+
+	//puts("restoreRegisters reached!");
+}
+
+void startThreadASM(__uint64_t mainRegs[], void *ptr, void *regs, void *stack) {
+	//Comment in the locations of each variable and be clear
+/*
+ *	push %rbp
+ *	movq %rsp, %rbp
+ *	movq %rdi, -8(%rbp)	# mainRegs
+ *	movq %rsi, -16(%rbp)	# ptr
+ *	movq %rdx, -24(%rbp)	# regs
+ *	movq %rcx, -32(%rbp)	# stack
+ *
+ */
+	//	Call to save mainRegs
+	asm(	"call saveRegisters\n\t"
+		"incl thread_count(%rip)\n\t"
+		"mov thread_count(%rip), %rdi\n\t"	//Moves thread_counter for first argument of *ptr
+		"call *%rsi\n\t");			//Calls the main[1|2] function
+	
+}
 
 void startThread(void *ptr) {
 	//To be completed by student
-	int kick_off_thread = thread;
-	thread++;
-	((void (*)(void*))ptr)(kick_off_thread);
+	regs[thread_count] = malloc(10*sizeof(__uint8_t)*8);		//regs[thread] holds the memory location of the space	?
+	stack[thread_count] = malloc(6400*sizeof(__uint8_t)*8);	//stack[thread] holds the memory location of space	?
+	startThreadASM(mainRegs, ptr, regs, stack);
 }
 
 void shareCPU(int thread) {
-	//To be completed by student
+	//Comment in asm info I may need
+	//	----nooooo -> Control flow of exec by branching
+	//	Based on which thread called it, save its regs (give save the offset since you give memory addy)
+	//	Restore regs from provided addy
+	
+	//preserveRegs[thread]
+	//restoreRegs[thread+1%2]
+	
 }
 
 void* main1(int whoami) {
@@ -30,5 +109,6 @@ void* main2(int whoami) {
 int main() {
 	startThread(main1);
 	startThread(main2);
+	puts("main reached");
 	return 0;
 }
