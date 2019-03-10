@@ -12,6 +12,7 @@ void* stack[2];
 __uint64_t mainRegs[10];
 
 int thread_count = 0;
+int first_time[2] = {1, 1};
 
 void saveRegisters(void *regs) {
 	//Comment in locations of vars and where they should go
@@ -68,6 +69,7 @@ void startThreadASM(__uint64_t mainRegs[], void *ptr, void *regs, void *stack) {
  */
 	//	Call to save mainRegs
 	asm(	"call saveRegisters\n\t"
+		"mov stack(%rip), %rbp\n\t"
 		"incl thread_count(%rip)\n\t"
 		"mov thread_count(%rip), %rdi\n\t"	//Moves thread_counter for first argument of *ptr
 		"call *%rsi\n\t");			//Calls the main[1|2] function
@@ -78,7 +80,7 @@ void startThread(void *ptr) {
 	//To be completed by student
 	regs[thread_count] = malloc(10*sizeof(__uint8_t)*8);		//regs[thread] holds the memory location of the space	?
 	stack[thread_count] = malloc(6400*sizeof(__uint8_t)*8);	//stack[thread] holds the memory location of space	?
-	startThreadASM(mainRegs, ptr, regs, stack);
+	startThreadASM(mainRegs, ptr, regs+(80*((thread_count+1)%2)), stack+(6400*((thread_count+1)%2)));
 }
 
 void shareCPU(int thread) {
@@ -89,6 +91,17 @@ void shareCPU(int thread) {
 	
 	//preserveRegs[thread]
 	//restoreRegs[thread+1%2]
+	
+	saveRegisters(regs+(80*((thread+1)%2)));
+	if(first_time[thread]) {
+		//If this is the first time we've reached this, then load up mainRegs
+		restoreRegisters(mainRegs);
+		first_time[thread] = 0;
+	} else {
+		//Otherwise just load up the other regs
+		restoreRegisters(regs+(80*((thread+1)%2)));
+	}
+	
 	
 }
 
