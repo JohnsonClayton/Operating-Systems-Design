@@ -30,7 +30,9 @@ void saveRegisters(void *regs) {
 		"mov %rdi, 32(%rdi)\n\t"
 		"mov %rsi, 40(%rdi)\n\t"
 		"mov %rsp, 48(%rdi)\n\t"
-		"mov %rbp, 56(%rdi)\n\t");
+		"mov %rbp, 56(%rdi)\n\t"
+		"lea (%rip), %rax\n\t"
+		"mov %rax, 64(%rdi)\n\t");
 	
 	//puts("saveRegisters reached!");
 }

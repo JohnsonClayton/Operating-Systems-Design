@@ -40,6 +40,8 @@ saveRegisters:
 	mov %rsi, 40(%rdi)
 	mov %rsp, 48(%rdi)
 	mov %rbp, 56(%rdi)
+	lea (%rip), %rax
+	mov %rax, 64(%rdi)
 	
 # 0 "" 2
 #NO_APP
@@ -62,7 +64,7 @@ restoreRegisters:
 	.cfi_def_cfa_register 6
 	movq	%rdi, -8(%rbp)
 #APP
-# 47 "coop.c" 1
+# 49 "coop.c" 1
 	mov (%rdi), %rax
 	mov 8(%rdi), %rbx
 	mov 16(%rdi), %rcx
@@ -96,7 +98,7 @@ startThreadASM:
 	movq	%rdx, -24(%rbp)
 	movq	%rcx, -32(%rbp)
 #APP
-# 71 "coop.c" 1
+# 73 "coop.c" 1
 	call saveRegisters
 	mov stack(%rip), %rbp
 	incl thread_count(%rip)
