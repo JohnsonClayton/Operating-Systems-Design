@@ -1,0 +1,11 @@
+#!/bin/bash
+echo "Starting.."
+echo "paging-linear-translate.py -P 1k -a 1m -p 512m -v -n 0:" >> q1bresults.txt
+python paging-linear-translate.py -P 1k -a 1m -p 512m -v -n 0 >> q1bresults.txt
+echo ".........."
+echo "paging-linear-translate.py -P 2k -a 1m -p 512m -v -n 0:" >> q1bresults.txt
+python paging-linear-translate.py -P 2k -a 1m -p 512m -v -n 0 >> q1bresults.txt
+echo ".........."
+echo "paging-linear-translate.py -P 4k -a 1m -p 512m -v -n 0:" >> q1bresults.txt
+python paging-linear-translate.py -P 4k -a 1m -p 512m -v -n 0 >> q1bresults.txt
+echo "......Done"
