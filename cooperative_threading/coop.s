@@ -206,6 +206,13 @@ shareCPU:
 	subq	$8, %rsp
 	movl	%edi, -4(%rbp)
 	movl	-4(%rbp), %eax
+	cltq
+	leaq	0(,%rax,4), %rdx
+	leaq	first_time(%rip), %rax
+	movl	(%rdx,%rax), %eax
+	testl	%eax, %eax
+	je	.L6
+	movl	-4(%rbp), %eax
 	leal	1(%rax), %edx
 	movl	%edx, %eax
 	sarl	$31, %eax
@@ -224,13 +231,6 @@ shareCPU:
 	addq	%rdx, %rax
 	movq	%rax, %rdi
 	call	saveRegisters
-	movl	-4(%rbp), %eax
-	cltq
-	leaq	0(,%rax,4), %rdx
-	leaq	first_time(%rip), %rax
-	movl	(%rdx,%rax), %eax
-	testl	%eax, %eax
-	je	.L6
 	leaq	mainRegs(%rip), %rdi
 	call	restoreRegisters
 	movl	-4(%rbp), %eax
@@ -238,28 +238,26 @@ shareCPU:
 	leaq	0(,%rax,4), %rdx
 	leaq	first_time(%rip), %rax
 	movl	$0, (%rdx,%rax)
-	jmp	.L8
+	jmp	.L9
 .L6:
-	movl	-4(%rbp), %eax
-	leal	1(%rax), %edx
-	movl	%edx, %eax
-	sarl	$31, %eax
-	shrl	$31, %eax
-	addl	%eax, %edx
-	andl	$1, %edx
-	subl	%eax, %edx
-	movl	%edx, %eax
-	movslq	%eax, %rdx
-	movq	%rdx, %rax
-	salq	$2, %rax
-	addq	%rdx, %rax
-	salq	$7, %rax
-	movq	%rax, %rdx
-	leaq	regs(%rip), %rax
-	addq	%rdx, %rax
+	cmpl	$0, -4(%rbp)
+	jne	.L8
+	movq	regs(%rip), %rax
+	movq	%rax, %rdi
+	call	saveRegisters
+	movq	8+regs(%rip), %rax
 	movq	%rax, %rdi
 	call	restoreRegisters
+	movl	$1, -4(%rbp)
+	jmp	.L9
 .L8:
+	movq	8+regs(%rip), %rax
+	movq	%rax, %rdi
+	call	saveRegisters
+	leaq	regs(%rip), %rdi
+	call	restoreRegisters
+	movl	$0, -4(%rbp)
+.L9:
 	nop
 	leave
 	.cfi_def_cfa 7, 8
@@ -283,13 +281,13 @@ main1:
 	.cfi_def_cfa_register 6
 	subq	$16, %rsp
 	movl	%edi, -4(%rbp)
-.L10:
+.L11:
 	leaq	.LC0(%rip), %rdi
 	call	puts@PLT
 	movl	-4(%rbp), %eax
 	movl	%eax, %edi
 	call	shareCPU
-	jmp	.L10
+	jmp	.L11
 	.cfi_endproc
 .LFE10:
 	.size	main1, .-main1
@@ -309,13 +307,13 @@ main2:
 	.cfi_def_cfa_register 6
 	subq	$16, %rsp
 	movl	%edi, -4(%rbp)
-.L12:
+.L13:
 	leaq	.LC1(%rip), %rdi
 	call	puts@PLT
 	movl	-4(%rbp), %eax
 	movl	%eax, %edi
 	call	shareCPU
-	jmp	.L12
+	jmp	.L13
 	.cfi_endproc
 .LFE11:
 	.size	main2, .-main2

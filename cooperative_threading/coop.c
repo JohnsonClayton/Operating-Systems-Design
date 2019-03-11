@@ -94,14 +94,25 @@ void shareCPU(int thread) {
 	//preserveRegs[thread]
 	//restoreRegs[thread+1%2]
 	
-	saveRegisters(regs+(80*((thread+1)%2)));
+	
 	if(first_time[thread]) {
 		//If this is the first time we've reached this, then load up mainRegs
+		
+		saveRegisters(regs+(80*((thread+1)%2)));
 		restoreRegisters(mainRegs);
 		first_time[thread] = 0;
 	} else {
 		//Otherwise just load up the other regs
-		restoreRegisters(regs+(80*((thread+1)%2)));
+		//restoreRegisters(regs+(80*((thread+1)%2)));
+		if(thread==0) {
+			saveRegisters(regs[0]);
+			restoreRegisters(regs[1]);
+			thread=1;
+		} else {
+			saveRegisters(regs[1]);
+			restoreRegisters(regs);
+			thread=0;
+		}
 	}
 	
 	
