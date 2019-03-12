@@ -33,8 +33,9 @@ void saveRegisters(void *regs) {
 		"mov %rbp, 56(%rdi)\n\t"
 		"lea (%rip), %rax\n\t"
 		"mov %rax, 64(%rdi)\n\t");
-	
-	//puts("saveRegisters reached!");
+
+	//	pop %rbp
+	//	ret	
 }
 
 void restoreRegisters(void *regs) {
@@ -46,16 +47,22 @@ void restoreRegisters(void *regs) {
 	 */
 	
 	//Load Registers
-	asm(	"mov (%rdi), %rax\n\t"
-		"mov 8(%rdi), %rbx\n\t"
+	asm(	"mov 8(%rdi), %rbx\n\t"
 		"mov 16(%rdi), %rcx\n\t"
 		"mov 24(%rdi), %rdx\n\t"
 		"mov 32(%rdi), %rdi\n\t"
 		"mov 40(%rdi), %rsi\n\t"
 		"mov 48(%rdi), %rsp\n\t"
-		"mov 56(%rdi), %rbp\n\t");
+		"mov 56(%rdi), %rbp\n\t"
+		"pop %rbp\n\t"
+		"pop %rax\n\t"
+		"mov 64(%rdi), %rax\n\t"
+		"push %rax\n\t"
+		"push %rbp\n\t"
+		"mov (%rdi), %rax\n\t"); //The rip comes back here (understandably) but it needs to show up on the other side of the ret. Maybe pop rbp, pop rax, move rax to mem, push rax, push rbp
 
-	//puts("restoreRegisters reached!");
+	//	popq %rbp
+	//	ret
 }
 
 void startThreadASM(__uint64_t mainRegs[], void *ptr, void *regs, void *stack) {
@@ -81,8 +88,13 @@ void startThreadASM(__uint64_t mainRegs[], void *ptr, void *regs, void *stack) {
 void startThread(void *ptr) {
 	//To be completed by student
 	regs[thread_count] = malloc(10*sizeof(__uint8_t)*8);		//regs[thread] holds the memory location of the space	?
-	stack[thread_count] = malloc(6400*sizeof(__uint8_t)*8);	//stack[thread] holds the memory location of space	?
-	startThreadASM(mainRegs, ptr, regs+(80*((thread_count+1)%2)), stack+(6400*((thread_count+1)%2)));
+	stack[thread_count] = malloc(64000*sizeof(__uint8_t)*8);	//stack[thread] holds the memory location of space	?
+	//startThreadASM(mainRegs, ptr, regs+(80*((thread_count+1)%2)), stack+(64000*((thread_count+1)%2)));
+	if(thread_count==0) {
+		startThreadASM(mainRegs, ptr, regs, stack);
+	} else {
+		startThreadASM(mainRegs, ptr, regs[1], stack[1]);
+	}
 }
 
 void shareCPU(int thread) {
@@ -90,30 +102,41 @@ void shareCPU(int thread) {
 	//	----nooooo -> Control flow of exec by branching
 	//	Based on which thread called it, save its regs (give save the offset since you give memory addy)
 	//	Restore regs from provided addy
-	
-	//preserveRegs[thread]
-	//restoreRegs[thread+1%2]
-	
-	
-	if(first_time[thread]) {
+	thread=thread-1;
+	//printf("first_time[0] is %d and first_time[1] is %d and thread is %d\n", first_time[0], first_time[1], thread);
+	if(first_time[thread] || first_time[(thread+1)%2]) {
 		//If this is the first time we've reached this, then load up mainRegs
+		//printf("---first_time[0] is %d and first_time[1] is %d and thread is %d\n", first_time[0], first_time[1], thread);
 		
-		saveRegisters(regs+(80*((thread+1)%2)));
-		restoreRegisters(mainRegs);
 		first_time[thread] = 0;
+		saveRegisters(regs+(80*((thread+1)%2)));
+		if(first_time[thread] || first_time[(thread+1)%2]) {
+			restoreRegisters(mainRegs);
+		} else {
+			puts("Else reached");
+			if(thread==1) {
+				saveRegisters(regs);
+				restoreRegisters(regs+80);
+				thread=2;
+			} else {
+				saveRegisters(regs+80);
+				restoreRegisters(regs);
+				thread=1;
+			}
+		}
 	} else {
 		//Otherwise just load up the other regs
 		//restoreRegisters(regs+(80*((thread+1)%2)));
+		puts("Other else reached");
 		if(thread==0) {
-			saveRegisters(regs[0]);
-			restoreRegisters(regs[1]);
-			thread=1;
+			saveRegisters(regs);
+			restoreRegisters(regs+80);
 		} else {
-			saveRegisters(regs[1]);
+			saveRegisters(regs+80);
 			restoreRegisters(regs);
-			thread=0;
 		}
 	}
+	//asm("ret\n\t");
 	
 	
 }
