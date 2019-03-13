@@ -41,6 +41,7 @@ saveRegisters:
 	mov %rsp, 48(%rdi)
 	mov %rbp, 56(%rdi)
 	lea (%rip), %rax
+	add $8, %rax
 	mov %rax, 64(%rdi)
 	
 # 0 "" 2
@@ -64,7 +65,7 @@ restoreRegisters:
 	.cfi_def_cfa_register 6
 	movq	%rdi, -8(%rbp)
 #APP
-# 50 "coop.c" 1
+# 51 "coop.c" 1
 	mov 8(%rdi), %rbx
 	mov 16(%rdi), %rcx
 	mov 24(%rdi), %rdx
@@ -103,7 +104,7 @@ startThreadASM:
 	movq	%rdx, -24(%rbp)
 	movq	%rcx, -32(%rbp)
 #APP
-# 80 "coop.c" 1
+# 81 "coop.c" 1
 	call saveRegisters
 	mov stack(%rip), %rbp
 	incl thread_count(%rip)
@@ -178,9 +179,15 @@ startThread:
 	.size	startThread, .-startThread
 	.section	.rodata
 .LC0:
-	.string	"Else reached"
+	.string	"Save thread 0"
 .LC1:
-	.string	"Other else reached"
+	.string	"Save thread 1"
+.LC2:
+	.string	"Restore main"
+.LC3:
+	.string	"Restore thread 1"
+.LC4:
+	.string	"Restore thread 0"
 	.text
 	.globl	shareCPU
 	.type	shareCPU, @function
@@ -201,113 +208,87 @@ shareCPU:
 	leaq	first_time(%rip), %rax
 	movl	(%rdx,%rax), %eax
 	testl	%eax, %eax
-	jne	.L9
-	movl	-4(%rbp), %eax
-	leal	1(%rax), %edx
-	movl	%edx, %eax
-	sarl	$31, %eax
-	shrl	$31, %eax
-	addl	%eax, %edx
-	andl	$1, %edx
-	subl	%eax, %edx
-	movl	%edx, %eax
-	cltq
-	leaq	0(,%rax,4), %rdx
-	leaq	first_time(%rip), %rax
-	movl	(%rdx,%rax), %eax
-	testl	%eax, %eax
-	je	.L10
-.L9:
+	je	.L9
 	movl	-4(%rbp), %eax
 	cltq
 	leaq	0(,%rax,4), %rdx
 	leaq	first_time(%rip), %rax
 	movl	$0, (%rdx,%rax)
-	movl	-4(%rbp), %eax
-	leal	1(%rax), %edx
-	movl	%edx, %eax
-	sarl	$31, %eax
-	shrl	$31, %eax
-	addl	%eax, %edx
-	andl	$1, %edx
-	subl	%eax, %edx
-	movl	%edx, %eax
-	movslq	%eax, %rdx
-	movq	%rdx, %rax
-	salq	$2, %rax
-	addq	%rdx, %rax
-	salq	$7, %rax
-	movq	%rax, %rdx
-	leaq	regs(%rip), %rax
-	addq	%rdx, %rax
-	movq	%rax, %rdi
-	call	saveRegisters
-	movl	-4(%rbp), %eax
-	cltq
-	leaq	0(,%rax,4), %rdx
-	leaq	first_time(%rip), %rax
-	movl	(%rdx,%rax), %eax
-	testl	%eax, %eax
-	jne	.L11
-	movl	-4(%rbp), %eax
-	leal	1(%rax), %edx
-	movl	%edx, %eax
-	sarl	$31, %eax
-	shrl	$31, %eax
-	addl	%eax, %edx
-	andl	$1, %edx
-	subl	%eax, %edx
-	movl	%edx, %eax
-	cltq
-	leaq	0(,%rax,4), %rdx
-	leaq	first_time(%rip), %rax
-	movl	(%rdx,%rax), %eax
-	testl	%eax, %eax
-	je	.L12
-.L11:
-	leaq	mainRegs(%rip), %rdi
-	call	restoreRegisters
-	jmp	.L15
-.L12:
+	cmpl	$0, -4(%rbp)
+	jne	.L10
 	leaq	.LC0(%rip), %rdi
 	call	puts@PLT
-	cmpl	$1, -4(%rbp)
-	jne	.L14
-	leaq	regs(%rip), %rdi
-	call	saveRegisters
-	leaq	640+regs(%rip), %rax
-	movq	%rax, %rdi
-	call	restoreRegisters
-	movl	$2, -4(%rbp)
-	jmp	.L15
-.L14:
-	leaq	640+regs(%rip), %rax
+	movq	regs(%rip), %rax
 	movq	%rax, %rdi
 	call	saveRegisters
-	leaq	regs(%rip), %rdi
-	call	restoreRegisters
-	movl	$1, -4(%rbp)
-	jmp	.L15
+	jmp	.L11
 .L10:
 	leaq	.LC1(%rip), %rdi
 	call	puts@PLT
+	movq	8+regs(%rip), %rax
+	movq	%rax, %rdi
+	call	saveRegisters
+.L11:
+	movl	-4(%rbp), %eax
+	cltq
+	leaq	0(,%rax,4), %rdx
+	leaq	first_time(%rip), %rax
+	movl	(%rdx,%rax), %eax
+	testl	%eax, %eax
+	jne	.L12
+	movl	-4(%rbp), %eax
+	leal	1(%rax), %edx
+	movl	%edx, %eax
+	sarl	$31, %eax
+	shrl	$31, %eax
+	addl	%eax, %edx
+	andl	$1, %edx
+	subl	%eax, %edx
+	movl	%edx, %eax
+	cltq
+	leaq	0(,%rax,4), %rdx
+	leaq	first_time(%rip), %rax
+	movl	(%rdx,%rax), %eax
+	testl	%eax, %eax
+	je	.L13
+.L12:
+	leaq	.LC2(%rip), %rdi
+	call	puts@PLT
+	leaq	mainRegs(%rip), %rdi
+	call	restoreRegisters
+	jmp	.L18
+.L13:
 	cmpl	$0, -4(%rbp)
-	jne	.L16
-	leaq	regs(%rip), %rdi
-	call	saveRegisters
-	leaq	640+regs(%rip), %rax
+	jne	.L15
+	leaq	.LC3(%rip), %rdi
+	call	puts@PLT
+	movq	8+regs(%rip), %rax
 	movq	%rax, %rdi
 	call	restoreRegisters
-	jmp	.L17
-.L16:
-	leaq	640+regs(%rip), %rax
-	movq	%rax, %rdi
-	call	saveRegisters
-	leaq	regs(%rip), %rdi
-	call	restoreRegisters
-	jmp	.L17
+	jmp	.L18
 .L15:
+	leaq	.LC4(%rip), %rdi
+	call	puts@PLT
+	movq	regs(%rip), %rax
+	movq	%rax, %rdi
+	call	restoreRegisters
+	jmp	.L18
+.L9:
+	cmpl	$0, -4(%rbp)
+	jne	.L17
+	leaq	.LC3(%rip), %rdi
+	call	puts@PLT
+	movq	8+regs(%rip), %rax
+	movq	%rax, %rdi
+	call	restoreRegisters
+	jmp	.L18
 .L17:
+	leaq	.LC4(%rip), %rdi
+	call	puts@PLT
+	movq	regs(%rip), %rax
+	movq	%rax, %rdi
+	call	restoreRegisters
+.L18:
 	nop
 	leave
 	.cfi_def_cfa 7, 8
@@ -316,7 +297,7 @@ shareCPU:
 .LFE9:
 	.size	shareCPU, .-shareCPU
 	.section	.rodata
-.LC2:
+.LC5:
 	.string	"Main 1 says Hello!"
 	.text
 	.globl	main1
@@ -331,18 +312,18 @@ main1:
 	.cfi_def_cfa_register 6
 	subq	$16, %rsp
 	movl	%edi, -4(%rbp)
-.L19:
-	leaq	.LC2(%rip), %rdi
+.L20:
+	leaq	.LC5(%rip), %rdi
 	call	puts@PLT
 	movl	-4(%rbp), %eax
 	movl	%eax, %edi
 	call	shareCPU
-	jmp	.L19
+	jmp	.L20
 	.cfi_endproc
 .LFE10:
 	.size	main1, .-main1
 	.section	.rodata
-.LC3:
+.LC6:
 	.string	"Main 2 says Hello!"
 	.text
 	.globl	main2
@@ -357,18 +338,18 @@ main2:
 	.cfi_def_cfa_register 6
 	subq	$16, %rsp
 	movl	%edi, -4(%rbp)
-.L21:
-	leaq	.LC3(%rip), %rdi
+.L22:
+	leaq	.LC6(%rip), %rdi
 	call	puts@PLT
 	movl	-4(%rbp), %eax
 	movl	%eax, %edi
 	call	shareCPU
-	jmp	.L21
+	jmp	.L22
 	.cfi_endproc
 .LFE11:
 	.size	main2, .-main2
 	.section	.rodata
-.LC4:
+.LC7:
 	.string	"main reached"
 	.text
 	.globl	main
@@ -385,7 +366,7 @@ main:
 	call	startThread
 	leaq	main2(%rip), %rdi
 	call	startThread
-	leaq	.LC4(%rip), %rdi
+	leaq	.LC7(%rip), %rdi
 	call	puts@PLT
 	movl	$0, %eax
 	popq	%rbp

@@ -32,6 +32,7 @@ void saveRegisters(void *regs) {
 		"mov %rsp, 48(%rdi)\n\t"
 		"mov %rbp, 56(%rdi)\n\t"
 		"lea (%rip), %rax\n\t"
+		"add $8, %rax\n\t"
 		"mov %rax, 64(%rdi)\n\t");
 
 	//	pop %rbp
@@ -55,7 +56,7 @@ void restoreRegisters(void *regs) {
 		"mov 48(%rdi), %rsp\n\t"
 		"mov 56(%rdi), %rbp\n\t"
 		"pop %rbp\n\t"
-		"pop %rax\n\t"
+		"pop %rax\n\t" //Ret addy
 		"mov 64(%rdi), %rax\n\t"
 		"push %rax\n\t"
 		"push %rbp\n\t"
@@ -104,41 +105,50 @@ void shareCPU(int thread) {
 	//	Restore regs from provided addy
 	thread=thread-1;
 	//printf("first_time[0] is %d and first_time[1] is %d and thread is %d\n", first_time[0], first_time[1], thread);
-	if(first_time[thread] || first_time[(thread+1)%2]) {
+	if(first_time[thread]){// || first_time[(thread+1)%2]) { //If this is either thread's first share
 		//If this is the first time we've reached this, then load up mainRegs
 		//printf("---first_time[0] is %d and first_time[1] is %d and thread is %d\n", first_time[0], first_time[1], thread);
 		
 		first_time[thread] = 0;
-		saveRegisters(regs+(80*((thread+1)%2)));
+		if(thread == 0) {
+			puts("Save thread 0");
+			saveRegisters(regs[0]);
+		} else {
+			puts("Save thread 1");
+			saveRegisters(regs[1]);
+		}
+		//saveRegisters(regs+(80*((thread+1)%2)));
 		if(first_time[thread] || first_time[(thread+1)%2]) {
+			puts("Restore main");
 			restoreRegisters(mainRegs);
 		} else {
-			puts("Else reached");
-			if(thread==1) {
-				saveRegisters(regs);
-				restoreRegisters(regs+80);
-				thread=2;
+			if(thread==0) {
+				//puts("Save thread 0");
+				//saveRegisters(regs);
+				puts("Restore thread 1");
+				restoreRegisters(regs[1]);
 			} else {
-				saveRegisters(regs+80);
-				restoreRegisters(regs);
-				thread=1;
+				//puts("Save thread 1");
+				//saveRegisters(regs+80);
+				puts("Restore thread 0");
+				restoreRegisters(regs[0]);
 			}
 		}
 	} else {
 		//Otherwise just load up the other regs
 		//restoreRegisters(regs+(80*((thread+1)%2)));
-		puts("Other else reached");
 		if(thread==0) {
-			saveRegisters(regs);
-			restoreRegisters(regs+80);
+			//puts("Save thread 0");
+			//saveRegisters(regs);
+			puts("Restore thread 1");
+			restoreRegisters(regs[1]);
 		} else {
-			saveRegisters(regs+80);
-			restoreRegisters(regs);
+			//puts("Save thread 1");
+			//saveRegisters(regs+80);
+			puts("Restore thread 0");
+			restoreRegisters(regs[0]);
 		}
 	}
-	//asm("ret\n\t");
-	
-	
 }
 
 void* main1(int whoami) {
