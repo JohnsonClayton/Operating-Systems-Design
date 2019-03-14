@@ -48,19 +48,19 @@ void restoreRegisters(void *regs) {
 	 */
 	
 	//Load Registers
-	asm(	"mov 8(%rdi), %rbx\n\t"
-		"mov 16(%rdi), %rcx\n\t"
+	asm(	"mov 16(%rdi), %rcx\n\t"
 		"mov 24(%rdi), %rdx\n\t"
 		"mov 32(%rdi), %rdi\n\t"
 		"mov 40(%rdi), %rsi\n\t"
 		"mov 48(%rdi), %rsp\n\t"
 		"mov 56(%rdi), %rbp\n\t"
 		"pop %rbp\n\t"
-		"pop %rax\n\t" //Ret addy
-		"mov 64(%rdi), %rax\n\t"
-		"push %rax\n\t"
+		"pop %rax\n\t" 			//Ret addy
+		"mov 64(%rdi), %rax\n\t" 	//Replacing addy
+		"push %rax\n\t"			//Pushing back onto stack in order
 		"push %rbp\n\t"
-		"mov (%rdi), %rax\n\t"); //The rip comes back here (understandably) but it needs to show up on the other side of the ret. Maybe pop rbp, pop rax, move rax to mem, push rax, push rbp
+		"mov (%rdi), %rax\n\t"
+		"mov 8(%rdi), %rbx\n\t"); //The rip comes back here (understandably) but it needs to show up on the other side of the ret. Maybe pop rbp, pop rax, move rax to mem, push rax, push rbp
 
 	//	popq %rbp
 	//	ret

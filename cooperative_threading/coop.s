@@ -66,7 +66,6 @@ restoreRegisters:
 	movq	%rdi, -8(%rbp)
 #APP
 # 51 "coop.c" 1
-	mov 8(%rdi), %rbx
 	mov 16(%rdi), %rcx
 	mov 24(%rdi), %rdx
 	mov 32(%rdi), %rdi
@@ -79,6 +78,7 @@ restoreRegisters:
 	push %rax
 	push %rbp
 	mov (%rdi), %rax
+	mov 8(%rdi), %rbx
 	
 # 0 "" 2
 #NO_APP
@@ -179,14 +179,8 @@ startThread:
 	.size	startThread, .-startThread
 	.section	.rodata
 .LC0:
-	.string	"Save thread 0"
-.LC1:
-	.string	"Save thread 1"
-.LC2:
-	.string	"Restore main"
-.LC3:
 	.string	"Restore thread 1"
-.LC4:
+.LC1:
 	.string	"Restore thread 0"
 	.text
 	.globl	shareCPU
@@ -216,15 +210,11 @@ shareCPU:
 	movl	$0, (%rdx,%rax)
 	cmpl	$0, -4(%rbp)
 	jne	.L10
-	leaq	.LC0(%rip), %rdi
-	call	puts@PLT
 	movq	regs(%rip), %rax
 	movq	%rax, %rdi
 	call	saveRegisters
 	jmp	.L11
 .L10:
-	leaq	.LC1(%rip), %rdi
-	call	puts@PLT
 	movq	8+regs(%rip), %rax
 	movq	%rax, %rdi
 	call	saveRegisters
@@ -252,23 +242,17 @@ shareCPU:
 	testl	%eax, %eax
 	je	.L13
 .L12:
-	leaq	.LC2(%rip), %rdi
-	call	puts@PLT
 	leaq	mainRegs(%rip), %rdi
 	call	restoreRegisters
 	jmp	.L18
 .L13:
 	cmpl	$0, -4(%rbp)
 	jne	.L15
-	leaq	.LC3(%rip), %rdi
-	call	puts@PLT
 	movq	8+regs(%rip), %rax
 	movq	%rax, %rdi
 	call	restoreRegisters
 	jmp	.L18
 .L15:
-	leaq	.LC4(%rip), %rdi
-	call	puts@PLT
 	movq	regs(%rip), %rax
 	movq	%rax, %rdi
 	call	restoreRegisters
@@ -276,14 +260,14 @@ shareCPU:
 .L9:
 	cmpl	$0, -4(%rbp)
 	jne	.L17
-	leaq	.LC3(%rip), %rdi
+	leaq	.LC0(%rip), %rdi
 	call	puts@PLT
 	movq	8+regs(%rip), %rax
 	movq	%rax, %rdi
 	call	restoreRegisters
 	jmp	.L18
 .L17:
-	leaq	.LC4(%rip), %rdi
+	leaq	.LC1(%rip), %rdi
 	call	puts@PLT
 	movq	regs(%rip), %rax
 	movq	%rax, %rdi
@@ -297,7 +281,7 @@ shareCPU:
 .LFE9:
 	.size	shareCPU, .-shareCPU
 	.section	.rodata
-.LC5:
+.LC2:
 	.string	"Main 1 says Hello!"
 	.text
 	.globl	main1
@@ -313,7 +297,7 @@ main1:
 	subq	$16, %rsp
 	movl	%edi, -4(%rbp)
 .L20:
-	leaq	.LC5(%rip), %rdi
+	leaq	.LC2(%rip), %rdi
 	call	puts@PLT
 	movl	-4(%rbp), %eax
 	movl	%eax, %edi
@@ -323,7 +307,7 @@ main1:
 .LFE10:
 	.size	main1, .-main1
 	.section	.rodata
-.LC6:
+.LC3:
 	.string	"Main 2 says Hello!"
 	.text
 	.globl	main2
@@ -339,7 +323,7 @@ main2:
 	subq	$16, %rsp
 	movl	%edi, -4(%rbp)
 .L22:
-	leaq	.LC6(%rip), %rdi
+	leaq	.LC3(%rip), %rdi
 	call	puts@PLT
 	movl	-4(%rbp), %eax
 	movl	%eax, %edi
@@ -349,7 +333,7 @@ main2:
 .LFE11:
 	.size	main2, .-main2
 	.section	.rodata
-.LC7:
+.LC4:
 	.string	"main reached"
 	.text
 	.globl	main
@@ -366,7 +350,7 @@ main:
 	call	startThread
 	leaq	main2(%rip), %rdi
 	call	startThread
-	leaq	.LC7(%rip), %rdi
+	leaq	.LC4(%rip), %rdi
 	call	puts@PLT
 	movl	$0, %eax
 	popq	%rbp
