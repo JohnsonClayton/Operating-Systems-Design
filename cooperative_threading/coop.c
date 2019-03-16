@@ -9,8 +9,8 @@
 
 typedef void (*funPtr)();
 
-void* regs[2];
-void* stack[2];
+__uint64_t* regs[2];
+__uint8_t* stack[2];
 __uint64_t mainRegs[10];
 
 int thread_count = 0;
@@ -19,7 +19,7 @@ int starting_thread = 0;
 int times_shared = 0;
 int thread = 0;
 
-void saveRegisters(void *regs) {
+void saveRegisters(__uint64_t *regs) {
 	//Comment in locations of vars and where they should go
 	/*
 	 *	pushq %rbp
@@ -44,7 +44,7 @@ void saveRegisters(void *regs) {
 	//	ret	
 }
 
-void restoreRegisters(void *regs) {
+void restoreRegisters(__uint64_t *regs) {
 	//Comment in locations of vars and w/e
 	/*
 	 *	pushq %rbp
@@ -66,7 +66,7 @@ void restoreRegisters(void *regs) {
 	//	ret
 }
 
-void startThreadASM(__uint64_t mainRegs[], funPtr ptr, void *regs, void *stack) {
+void startThreadASM(__uint8_t *stack) {
 	//Comment in the locations of each variable and be clear
 /*
  *	push %rbp
@@ -94,10 +94,10 @@ void startThread(funPtr ptr) {
 	//startThreadASM(mainRegs, ptr, regs+(80*((thread_count+1)%2)), stack+(64000*((thread_count+1)%2)));
 	starting_thread=1;
 	if(thread_count==0) {
-		startThreadASM(mainRegs, ptr, regs[0], stack[0]);
+		startThreadASM(stack[0]);
 		saveRegisters(mainRegs);
 	} else {
-		startThreadASM(mainRegs, ptr, regs[1], stack[1]);
+		startThreadASM(stack[1]);
 		saveRegisters(mainRegs);
 	}
 	thread_count++;
@@ -176,17 +176,17 @@ void shareCPU() {
 }
 
 void* main1() {
-	//while(1) {
+	while(1) {
 		puts("Main 1 says Hello!");
 		shareCPU();
-	//}
+	}
 }
 
 void* main2() {
-	//while(1) {
+	while(1) {
 		puts("Main 2 says Hello!");
 		shareCPU();
-	//}
+	}
 }
 
 int main() {

@@ -114,9 +114,6 @@ startThreadASM:
 	movq	%rsp, %rbp
 	.cfi_def_cfa_register 6
 	movq	%rdi, -8(%rbp)
-	movq	%rsi, -16(%rbp)
-	movq	%rdx, -24(%rbp)
-	movq	%rcx, -32(%rbp)
 #APP
 # 86 "coop.c" 1
 	mov %rcx, %rbp
@@ -164,21 +161,15 @@ startThread:
 	movl	thread_count(%rip), %eax
 	testl	%eax, %eax
 	jne	.L5
-	movq	stack(%rip), %rcx
-	movq	regs(%rip), %rdx
-	movq	-24(%rbp), %rax
-	movq	%rax, %rsi
-	leaq	mainRegs(%rip), %rdi
+	movq	stack(%rip), %rax
+	movq	%rax, %rdi
 	call	startThreadASM
 	leaq	mainRegs(%rip), %rdi
 	call	saveRegisters
 	jmp	.L6
 .L5:
-	movq	8+stack(%rip), %rcx
-	movq	8+regs(%rip), %rdx
-	movq	-24(%rbp), %rax
-	movq	%rax, %rsi
-	leaq	mainRegs(%rip), %rdi
+	movq	8+stack(%rip), %rax
+	movq	%rax, %rdi
 	call	startThreadASM
 	leaq	mainRegs(%rip), %rdi
 	call	saveRegisters
@@ -288,14 +279,12 @@ main1:
 	.cfi_offset 6, -16
 	movq	%rsp, %rbp
 	.cfi_def_cfa_register 6
+.L16:
 	leaq	.LC3(%rip), %rdi
 	call	puts@PLT
 	movl	$0, %eax
 	call	shareCPU
-	nop
-	popq	%rbp
-	.cfi_def_cfa 7, 8
-	ret
+	jmp	.L16
 	.cfi_endproc
 .LFE10:
 	.size	main1, .-main1
@@ -313,14 +302,12 @@ main2:
 	.cfi_offset 6, -16
 	movq	%rsp, %rbp
 	.cfi_def_cfa_register 6
+.L18:
 	leaq	.LC4(%rip), %rdi
 	call	puts@PLT
 	movl	$0, %eax
 	call	shareCPU
-	nop
-	popq	%rbp
-	.cfi_def_cfa 7, 8
-	ret
+	jmp	.L18
 	.cfi_endproc
 .LFE11:
 	.size	main2, .-main2
