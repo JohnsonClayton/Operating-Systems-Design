@@ -1,0 +1,18 @@
+Main 1 says Hello!
+Before saving... thread=0
+Main 2 says Hello!
+Before saving... thread=1
+Loading up ba7e3260
+Main 2 says Hello!
+Before saving... thread=0
+Loading up ba7e4500
+Main 2 says Hello!
+Before saving... thread=1
+Loading up ba7e3260
+Main 2 says Hello!
+Before saving... thread=0
+Loading up ba7e4500
+Main 2 says Hello!
+Before saving... thread=1
+Loading up ba7e3260
+main reached
