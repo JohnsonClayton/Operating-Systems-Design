@@ -1,3 +1,9 @@
 #!/bin/bash
 
-gcc -S coop.c -o coop.s && gcc coop.c -o coop
+if gcc -w -S coop.c -o coop.s && gcc -g -w coop.c -o coop ; then
+	read -p "Compiled! Want to execute? (Y/n)
+==>" choice
+	if [[ "$choice" == "Y" || "$choice" == "y" ]] ; then
+		./coop
+	fi
+fi
