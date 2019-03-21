@@ -44,14 +44,13 @@ void saveRegisters(__uint64_t *regs) {
 		"mov %rsi, 40(%rdi)\n\t"
 		"mov %rsp, 48(%rdi)\n\t"
 		"mov %rbp, 56(%rdi)\n\t");
-		//"lea (%rip), %rax\n\t"
-		//"add $8, %rax\n\t"
-		//"mov %rax, 64(%rdi)\n\t");
+	//	"lea (%rip), %rax\n\t"
+	//	"add $8, %rax\n\t"
+	//	"mov %rax, 64(%rdi)\n\t");
 	//Call outputSavedRegisters after moving regs into appropriate order
 	asm(	"mov %rbp, %rdi\n\t"
 		"mov %rsp, %rsi\n\t"
 		"call outputSavedRegisters\n\t");
-	//Move one I changed back just in case
 
 	//	pop %rbp
 	//	ret	
@@ -94,36 +93,32 @@ void restoreRegisters(__uint64_t *regs) {
 	//	ret
 }
 
-void startThreadASM(__uint8_t *stack) {
+void startThreadASM(__uint8_t *stack, funPtr ptr) {
 	//Comment in the locations of each variable and be clear
 /*
  *	push %rbp
  *	movq %rsp, %rbp
  *	movq %rdi, -8(%rbp)	# stack
+ *	movq %rsi, -16(%rbp)	# ptr
  *
  */
-	asm("mov %rdi, %rbp\n\t");
-	
+	asm(	"mov %rdi, %rbp\n\t"
+		"call *%rsi\n\t");
 }
 
 void startThread(funPtr ptr) {
 	//To be completed by student
+
+	starting_thread=1;
+	
+	saveRegisters(mainRegs);
 	regs[thread_count] = malloc(10*sizeof(__uint64_t)*8);
-	//stack[thread_count] = malloc(64000*sizeof(__uint8_t)*8+64000*sizeof(__uint8_t)*8);
 	stack[thread_count] = malloc(64000*sizeof(__uint8_t)*8) + 64000*sizeof(__uint8_t)*8;
 
 	printf("Starting thread_count %d:\n\tregs[%d] \t: %p\n\tstack[%d] \t: %p\n", thread_count, thread_count, regs[thread_count], thread_count, stack[thread_count]);
-
-	starting_thread=1;
-	if(thread_count==0) {
-		startThreadASM(stack[thread_count]);
-		saveRegisters(mainRegs);
-	} else {
-		startThreadASM(stack[thread_count]);
-		saveRegisters(mainRegs);
-	}
+	startThreadASM(stack[thread_count], ptr); //stack[thread_count] = 0x0 for some reason...
 	thread_count++;
-	ptr();
+
 	starting_thread=0;
 }
 
