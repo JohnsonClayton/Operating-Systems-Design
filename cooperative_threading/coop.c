@@ -102,8 +102,8 @@ void startThreadASM(__uint8_t *stack, funPtr ptr) {
  *	movq %rsi, -16(%rbp)	# ptr
  *
  */
-	asm(	"mov %rdi, %rbp\n\t"
-		"call *%rsi\n\t");
+	asm(	"mov %rdi, %rsp\n\t");
+	ptr();
 }
 
 void startThread(funPtr ptr) {

@@ -195,17 +195,20 @@ startThreadASM:
 	.cfi_offset 6, -16
 	movq	%rsp, %rbp
 	.cfi_def_cfa_register 6
+	subq	$16, %rsp
 	movq	%rdi, -8(%rbp)
 	movq	%rsi, -16(%rbp)
 #APP
 # 105 "coop.c" 1
-	mov %rdi, %rbp
-	call *%rsi
+	mov %rdi, %rsp
 	
 # 0 "" 2
 #NO_APP
+	movq	-16(%rbp), %rdx
+	movl	$0, %eax
+	call	*%rdx
 	nop
-	popq	%rbp
+	leave
 	.cfi_def_cfa 7, 8
 	ret
 	.cfi_endproc
