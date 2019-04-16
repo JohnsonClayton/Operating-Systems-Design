@@ -6,10 +6,10 @@ typedef struct __myarg_t {
 	int b;
 } myarg_t;
 
-void *mythread(void *arg) {
+int *mythread(void *arg) {
 	myarg_t *m = (myarg_t *) arg;
 	printf("thread %ld: %d %d\n", pthread_self(), m->a, m->b);
-	return NULL;
+	return 2;
 }
 
 void *test(void) {
@@ -63,6 +63,7 @@ int main(int argc, char* argv[]) {
 	rc = pthread_create(&p4, NULL, test, NULL);
 
 	pthread_join(p1, NULL);
+	//printf("Returned value = %d\n", rc); //How do we get the return value from the thread?
 	pthread_join(p2, NULL);
 	pthread_join(p3, NULL);
 	pthread_join(p4, NULL);
