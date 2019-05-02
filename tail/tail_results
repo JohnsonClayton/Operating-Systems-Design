@@ -1,0 +1,26 @@
+==> testfile <==
+491
+492
+493
+494
+495
+496
+497
+498
+499
+500
+
+==> hi <==
+test1
+
+==> cjtail.c <==
+			       	printf("==> %s <==\n", filename);
+				tail(filename);
+				if(i != (argc - 1)) printf("\n");
+			} else tail(filename);
+
+		}
+	}
+
+	return 0;
+}

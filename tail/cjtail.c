@@ -8,16 +8,7 @@
 
 const int MAX_BUFF_SIZE = 2000;
 
-int main(int argc, char* argv[]) {
-
-	char filename[251];
-	if(argc < 2) {
-		puts("Usage: cjtail [filename]");
-	} else {
-		strncpy(&filename, argv[1], 250);
-		filename[250] = '\000';
-	}
-
+void tail(char *filename) {
 	int fd = open(filename, O_RDONLY);
 	if(fd < 0) {
 		puts("An error occurred!");
@@ -39,8 +30,13 @@ int main(int argc, char* argv[]) {
 		//	don't add this char then exit
 		int new_line_counter = 0;
 		int offset = -1;
+		
 		lseek(fd, (off_t) offset, SEEK_END);
-		while(new_line_counter <= 10 && (offset*-1 - 1) <= fstats.st_size && read(fd, &temp_char, 1) == 1) {
+
+		while(		new_line_counter <= 10 
+				&& (offset*-1 - 1) <= fstats.st_size 
+				&& read(fd, &temp_char, 1) == 1) {
+
 			if(temp_char[0] == '\n') {
 				new_line_counter++;
 			}
@@ -56,6 +52,26 @@ int main(int argc, char* argv[]) {
 
 		printf("%s", output_buffer);
 		close(fd);
+	}
+
+}
+
+int main(int argc, char* argv[]) {
+
+	char filename[251];
+	if(argc < 2) {
+		puts("Usage: cjtail [filename]");
+	} else {
+		for(int i = 1; i < argc; i++) {
+			strncpy(&filename, argv[i], 250);
+			filename[250] = '\000';
+			if(argc > 1) {
+			       	printf("==> %s <==\n", filename);
+				tail(filename);
+				if(i != (argc - 1)) printf("\n");
+			} else tail(filename);
+
+		}
 	}
 
 	return 0;
