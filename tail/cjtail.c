@@ -8,7 +8,7 @@
 
 const int MAX_BUFF_SIZE = 2000;
 
-void tail(char *filename) {
+void tail(char *filename, int num_of_lines) {
 	int fd = open(filename, O_RDONLY);
 	if(fd < 0) {
 		puts("An error occurred!");
@@ -33,7 +33,7 @@ void tail(char *filename) {
 		
 		lseek(fd, (off_t) offset, SEEK_END);
 
-		while(		new_line_counter <= 10 
+		while(		new_line_counter <= num_of_lines 
 				&& (offset*-1 - 1) <= fstats.st_size 
 				&& read(fd, &temp_char, 1) == 1) {
 
@@ -59,18 +59,33 @@ void tail(char *filename) {
 int main(int argc, char* argv[]) {
 
 	char filename[251];
+	int num_of_lines = 10;
 	if(argc < 2) {
 		puts("Usage: cjtail [filename]");
 	} else {
+		//Parse arguments
 		for(int i = 1; i < argc; i++) {
-			strncpy(&filename, argv[i], 250);
-			filename[250] = '\000';
-			if(argc > 1) {
-			       	printf("==> %s <==\n", filename);
-				tail(filename);
-				if(i != (argc - 1)) printf("\n");
-			} else tail(filename);
-
+			if(argv[i][0] == '-') {
+				if(strlen(argv[i]) > 1) {
+					argv[i][0] = '0';
+					num_of_lines = atoi(argv[i]);
+					if(num_of_lines == 0) num_of_lines = 10;
+					argv[i] = "\000";
+				}
+			}
+		}
+		
+		//Call tail on all files provided
+		for(int i = 1; i < argc; i++) {
+			if(strcmp(argv[i], "\000")) {
+				strncpy(&filename, argv[i], 250);
+				filename[250] = '\000';
+				if(argc > 1) {
+					printf("==> %s <==\n", filename);
+					tail(filename, num_of_lines);
+					if(i != (argc - 1)) printf("\n");
+				} else tail(filename, num_of_lines);
+			}
 		}
 	}
 
